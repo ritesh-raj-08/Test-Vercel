@@ -1,17 +1,4 @@
 import nodemailer from "nodemailer";
-import { google } from "googleapis";
-
-const { OAuth2 } = google.auth;
-
-const oauth2Client = new OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  "https://developers.google.com/oauthplayground"
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-});
 
 export interface SendMailOptions {
   to: string;
@@ -19,25 +6,41 @@ export interface SendMailOptions {
   html: string;
 }
 
+/**
+ * Simple SMTP sender using username/password (or app password).
+ * Environment variables:
+ * - SMTP_HOST (default: smtp.gmail.com)
+ * - SMTP_PORT (default: 587)
+ * - SMTP_SECURE ("true" or "false", default: false)
+ * - SMTP_USER
+ * - SMTP_PASS
+ * - SMTP_FROM_EMAIL
+ */
 export async function sendEmailSMTP({ to, subject, html }: SendMailOptions) {
   try {
-    const accessTokenResponse = await oauth2Client.getAccessToken();
-    const accessToken = (accessTokenResponse as any)?.token || accessTokenResponse;
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = Number(process.env.SMTP_PORT) || 587;
+    const secure = process.env.SMTP_SECURE === "true"; // true for 465, false for 587
+
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+
+    if (!user || !pass) {
+      throw new Error("SMTP credentials are not configured (SMTP_USER / SMTP_PASS)");
+    }
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host,
+      port,
+      secure,
       auth: {
-        type: "OAuth2",
-        user: process.env.SMTP_FROM_EMAIL,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        accessToken,
+        user,
+        pass,
       },
     });
 
     const mailOptions = {
-      from: process.env.SMTP_FROM_EMAIL,
+      from: process.env.SMTP_FROM_EMAIL || user,
       to,
       subject,
       html,
