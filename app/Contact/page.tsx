@@ -13,6 +13,7 @@ export default function ContactForm() {
     email: "",
     contact: "",
   });
+  const [isSending, setIsSending] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,15 +23,17 @@ export default function ContactForm() {
     e.preventDefault();
     const formElement = e.currentTarget;
     const formData = new FormData(formElement);
+    setIsSending(true);
+    const id = toast.loading("Sending message...");
     try {
       await submitContactForm(formData);
-      // alert("Email sent successfully!");
-      toast.success("Email sent successfully!");
+      toast.success("Email sent successfully!", { id });
       setFormData({ name: "", email: "", contact: "" });
     } catch (error) {
-      // alert("Failed to send email");
-      toast.error("Failed to send email");
+      toast.error("Failed to send email", { id });
       console.error(error);
+    } finally {
+      setIsSending(false);
     }
   }; 
 
@@ -88,11 +91,11 @@ export default function ContactForm() {
         
         {/* Submit Button */}
         <button
-        
           type="submit"
-          className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-medium rounded-xl shadow-lg hover:opacity-90 transition-all"
+          disabled={isSending}
+          className={`w-full py-3 font-medium rounded-xl shadow-lg transition-all ${isSending ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-linear-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90'}`}
         >
-          Submit
+          {isSending ? 'Sending...' : 'Submit'}
         </button>
         <Button variant="outline" asChild>
       <a

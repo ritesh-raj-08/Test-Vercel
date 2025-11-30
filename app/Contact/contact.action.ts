@@ -26,6 +26,8 @@ export const submitContactForm = async (formdata: FormData): Promise<void> => {
         console.log("Email sent successfully");
     } catch (error) {
         console.error("Error sending email:", error);
+        // Re-throw so the client can react to the failure
+        throw error;
     }
     
     
