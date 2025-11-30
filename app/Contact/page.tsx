@@ -28,7 +28,8 @@ export default function ContactForm() {
       toast.success("Email sent successfully!");
       setFormData({ name: "", email: "", contact: "" });
     } catch (error) {
-      alert("Failed to send email");
+      // alert("Failed to send email");
+      toast.error("Failed to send email");
       console.error(error);
     }
   }; 
